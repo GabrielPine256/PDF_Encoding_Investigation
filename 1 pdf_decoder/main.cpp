@@ -1,4 +1,4 @@
-// 
+//  g++ main.cpp decoder.hpp cli_interface.hpp -o pdf_decoder && ./pdf_decoder
 
 #include"decoder.hpp" 
 
