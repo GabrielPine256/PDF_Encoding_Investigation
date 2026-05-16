@@ -29,21 +29,34 @@ I'll fall back on my bitshifting instinct. I want to display the 1s and 0s of th
 The LLM points out "PREFACE" in the plaintext is 'encoded' as consecutive ASCII characters. What I had been looking at was not ciphertext, but a list of indexes to an encoding stored elsewhere in the PDF. The information of the plaintext is not to be found in what I had been working on. 
 It offers the following tools to figure the encoding of the PDF: 
 
-$ strings output.pdf | grep -i "encoding"
+$ strings output.pdf | grep -i "encoding" 
+
 Which gives: 
 << /BaseFont /NFMIKD+AmericanTypewriter-Bold /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 77 0 R /LastChar 222 /Subtype /TrueType /Type /Font /Widths 78 0 R >>
 << /BaseFont /BBJMGB+AmericanTypewriter /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 79 0 R /LastChar 211 /Subtype /TrueType /Type /Font /Widths 80 0 R >>
 << /BaseFont /NLTNUD+Symbol /Encoding /MacRomanEncoding /FirstChar 165 /FontDescriptor 96 0 R /LastChar 165 /Subtype /TrueType /Type /Font /Widths 97 0 R >>
 
+-
+
 $ pdftotext -enc MacRoman input.pdf output.txt
+
 And then letting it auto-detect the encoding: 
+
 $ pdftotext input.pdf output.txt
 
+-
+
 $ qpdf --decrypt input.pdf output.pdf
+
 $ pdftohtml output.pdf output.html 
 
+-
+
 $ pipx install pdfminer.six
+
 $ pdf2txt.py output.pdf
+
+-
 
 Claude: 
 > **Mac OS X 10.5.8's Quartz PDFContext** (2009) had known issues:
@@ -53,9 +66,13 @@ Claude:
 
 $ qpdf --stream-data=preserve output.pdf repaired.pdf
 
+-
+
 $ gs -sDEVICE=txtwrite -o plaintext.txt output.pdf
 
 & gs -sDEVICE=txtwrite -dUseCIEColor -o plaintext.txt output.pdf
+
+-
 
 All output text files included the first page itself (which actually copy-pastes fine) and gibberish for the rest. 
 
