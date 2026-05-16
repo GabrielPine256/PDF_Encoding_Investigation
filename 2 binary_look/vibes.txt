@@ -1,0 +1,757 @@
+User prompt 9 of 23 - 5/14/2026, 11:27:01 PM:
+Write a c++ program to read text from a file and print a stream of 1s and 0s to stdout
+
+Claude Haiku 4.5:
+The user wants a C++ program that:
+1. Reads text from a file
+2. Prints a stream of 1s and 0s to stdout
+
+I think they want to convert each character to its binary representation (1s and 0s). This is a straightforward program.
+
+Let me write a complete program that:
+- Opens a file
+- Reads characters from it
+- Converts each character to its binary representation
+- Prints to stdout
+
+I'll keep it simple and clear.```cpp
+#include <iostream>
+#include <fstream>
+#include <bitset>
+
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " <filename>" << std::endl;
+        return 1;
+    }
+
+    std::ifstream file(argv[1]);
+    if (!file.is_open()) {
+        std::cerr << "Error: Could not open file " << argv[1] << std::endl;
+        return 1;
+    }
+
+    char c;
+    while (file.get(c)) {
+        std::cout << std::bitset<8>(static_cast<unsigned char>(c));
+    }
+    std::cout << std::endl;
+
+    file.close();
+    return 0;
+}
+```
+
+**What it does:**
+- Takes a filename as a command-line argument
+- Opens and reads the file character by character
+- Converts each character to its 8-bit binary representation using `std::bitset<8>`
+- Prints the binary stream to stdout
+
+**Example:**
+If the file contains `"AB"`, the output would be:
+```
+0100000101000010
+```
+(65 = 'A' in binary, 66 = 'B' in binary)
+
+**Compile and run:**
+```bash
+g++ -o binary_converter program.cpp
+./binary_converter myfile.txt
+```
+
+--------------------
+
+User prompt 10 of 23 - 5/14/2026, 11:28:48 PM:
+Read two files, show their binary side by side in an 80char wide terminal with '|' separating veritcally at column 40. 
+
+Claude Haiku 4.5:
+The user wants to:
+1. Read two files
+2. Show their binary representations side by side
+3. In an 80-character wide terminal
+4. With '|' at column 40 separating them vertically
+
+So the format would be:
+```
+[40 chars of binary] | [40 chars of binary]
+```
+
+Each file's binary will be shown as a stream of 1s and 0s, 40 characters wide for each file, separated by a pipe at column 40.
+
+Let me think about the logic:
+- Read both files
+- Convert each character to 8-bit binary
+- For each file, we need to display 40 characters per line (5 characters from each file, since each char is 8 bits)
+- Actually wait, 40 binary digits = 5 characters (40/8)
+- We read characters from file1, convert to binary, and display 40 binary digits
+- Then a pipe
+- Then 40 binary digits from file2
+- Then newline
+
+So the process:
+1. Read a character from file1, convert to 8-bit binary
+2. Read a character from file2, convert to 8-bit binary
+3. Keep accumulating binary strings until we have 40 characters from each side
+4. Print line with pipe separator
+5. Reset and continue
+
+Let me write this:
+
+```cpp
+#include <iostream>
+#include <fstream>
+#include <bitset>
+#include <string>
+
+int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <file1> <file2>" << std::endl;
+        return 1;
+    }
+
+    std::ifstream file1(argv[1]);
+    std::ifstream file2(argv[2]);
+    
+    if (!file1.is_open() || !file2.is_open()) {
+        std::cerr << "Error: Could not open files" << std::endl;
+        return 1;
+    }
+
+    std::string left = "";
+    std::string right = "";
+    char c1, c2;
+    
+    while (file1.get(c1) || file2.get(c2)) {
+        if (file1.get(c1)) {
+            left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+        }
+        if (file2.get(c2)) {
+            right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+        }
+        
+        if (left.length() >= 40 || right.length() >= 40) {
+            std::cout << left.substr(0, 40) << " | " << right.substr(0, 40) << std::endl;
+            left = left.substr(40);
+            right = right.substr(40);
+        }
+    }
+    
+    if (!left.empty() || !right.empty()) {
+        left.resize(40, '0');
+        right.resize(40, '0');
+        std::cout << left << " | " << right << std::endl;
+    }
+    
+    return 0;
+}
+```
+
+The loop structure has a problem—calling `get()` multiple times consumes characters without properly tracking them. I need to restructure this so each character is read once and stored, then processed. The output logic should also be simplified to handle remaining bits at the end without the complex padding logic. 40) : right;
+        
+        l.resize(40, ' ');
+        r.resize(40, ' ');
+        
+        std::cout << l << " | " << r << std::endl;
+        
+        left = left.size() > 40 ? left.substr(40) : "";
+        right = right.size() > 40 ? right.substr(40) : "";
+    }
+    
+    file1.close();
+    file2.close();
+    return 0;
+}
+```
+
+The logic here is getting tangled. The condition `file1.get(c1) || file2.get(c2)` doesn't work as intended—if the first file reaches EOF, the second part won't execute properly. I need to handle each file independently and continue reading until both are exhausted. The get() method returns the stream itself, which converts to bool based on the stream's state, so I should check each file's status separately in the loop condition. .substr(0, 40) << std::endl;
+            left = left.substr(40);
+            right = right.substr(40);
+        }
+    }
+    
+    // Handle remaining characters
+    while (!left.empty() || !right.empty()) {
+        std::string l = left.size() >= 40 ? left.substr(0, 40) : left;
+        std::string r = right.size() >= 40 ? right.substr(0, 40) : right;
+        
+        l.resize(40, ' ');
+        r.resize(40, ' ');
+        
+        std::cout << l << " | " << r << std::endl;
+        
+        left = left.size() > 40 ? left.substr(40) : "";
+        right = right.size() > 40 ? right.substr(40) : "";
+    }
+    
+    file1.close();
+    file2.close();
+    return 0;
+}
+```
+
+The main loop reads from both files and accumulates their binary representations. Whenever either string reaches 40 bits, I output a line with both sides padded to 40 characters, then remove those bits. After both files are exhausted, the remaining bits are padded with spaces and displayed.```cpp
+#include <iostream>
+#include <fstream>
+#include <bitset>
+#include <string>
+
+int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <file1> <file2>" << std::endl;
+        return 1;
+    }
+
+    std::ifstream file1(argv[1]);
+    std::ifstream file2(argv[2]);
+    
+    if (!file1.is_open() || !file2.is_open()) {
+        std::cerr << "Error: Could not open files" << std::endl;
+        return 1;
+    }
+
+    std::string left = "";
+    std::string right = "";
+    char c1, c2;
+    bool read1, read2;
+    
+    while ((read1 = file1.get(c1)) || (read2 = file2.get(c2))) {
+        if (read1) {
+            left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+        }
+        if (read2) {
+            right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+        }
+        
+        while (left.size() >= 40 && right.size() >= 40) {
+            std::cout << left.substr(0, 40) << " | " << right.substr(0, 40) << std::endl;
+            left = left.substr(40);
+            right = right.substr(40);
+        }
+    }
+    
+    // Handle remaining characters
+    while (!left.empty() || !right.empty()) {
+        std::string l = (left.size() >= 40) ? left.substr(0, 40) : left;
+        std::string r = (right.size() >= 40) ? right.substr(0, 40) : right;
+        
+        l.resize(40, ' ');
+        r.resize(40, ' ');
+        
+        std::cout << l << " | " << r << std::endl;
+        
+        left = (left.size() > 40) ? left.substr(40) : "";
+        right = (right.size() > 40) ? right.substr(40) : "";
+    }
+    
+    file1.close();
+    file2.close();
+    return 0;
+}
+```
+
+**What it does:**
+- Reads both files character by character
+- Converts each character to 8-bit binary
+- Accumulates binary strings until each has 40 characters
+- Prints each line with 40 binary digits, a pipe separator, and 40 more binary digits
+- Pads the final line with spaces if the files have different lengths
+
+**Example output:**
+```
+01000001010000100100001101000100 | 11110000111100001111000011110000
+01000101010001100100011101001000 | 11111111111111111111111111111111
+```
+
+**Compile and run:**
+```bash
+g++ -o binary_compare program.cpp
+./binary_compare file1.txt file2.txt
+```
+
+--------------------
+
+User prompt 11 of 23 - 5/14/2026, 11:30:23 PM:
+Rewrite the same program, but write to output.txt 
+
+Claude Haiku 4.5:
+The user wants me to rewrite the program to write to output.txt instead of printing to stdout. I need to change the output from std::cout to an ofstream object that writes to "output.txt".
+
+Let me modify the code:
+1. Create an ofstream for "output.txt"
+2. Check if it opens successfully
+3. Replace all std::cout with the ofstream object
+4. Close the output file
+
+I'll keep everything else the same - the logic, the 80-character width with | at column 40, etc.```cpp
+#include <iostream>
+#include <fstream>
+#include <bitset>
+#include <string>
+
+int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <file1> <file2>" << std::endl;
+        return 1;
+    }
+
+    std::ifstream file1(argv[1]);
+    std::ifstream file2(argv[2]);
+    std::ofstream output("output.txt");
+    
+    if (!file1.is_open() || !file2.is_open()) {
+        std::cerr << "Error: Could not open input files" << std::endl;
+        return 1;
+    }
+    
+    if (!output.is_open()) {
+        std::cerr << "Error: Could not open output.txt" << std::endl;
+        return 1;
+    }
+
+    std::string left = "";
+    std::string right = "";
+    char c1, c2;
+    bool read1, read2;
+    
+    while ((read1 = file1.get(c1)) || (read2 = file2.get(c2))) {
+        if (read1) {
+            left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+        }
+        if (read2) {
+            right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+        }
+        
+        while (left.size() >= 40 && right.size() >= 40) {
+            output << left.substr(0, 40) << " | " << right.substr(0, 40) << std::endl;
+            left = left.substr(40);
+            right = right.substr(40);
+        }
+    }
+    
+    // Handle remaining characters
+    while (!left.empty() || !right.empty()) {
+        std::string l = (left.size() >= 40) ? left.substr(0, 40) : left;
+        std::string r = (right.size() >= 40) ? right.substr(0, 40) : right;
+        
+        l.resize(40, ' ');
+        r.resize(40, ' ');
+        
+        output << l << " | " << r << std::endl;
+        
+        left = (left.size() > 40) ? left.substr(40) : "";
+        right = (right.size() > 40) ? right.substr(40) : "";
+    }
+    
+    file1.close();
+    file2.close();
+    output.close();
+    return 0;
+}
+```
+
+**Changes:**
+- Added `std::ofstream output("output.txt");`
+- Changed all `std::cout` to `output`
+- Added error checking for the output file
+- Added `output.close();` at the end
+
+**Compile and run:**
+```bash
+g++ -o binary_compare program.cpp
+./binary_compare file1.txt file2.txt
+# Results written to output.txt
+```
+
+--------------------
+
+User prompt 12 of 23 - 5/14/2026, 11:31:29 PM:
+Will that program support files of arbitrary lengths?
+
+Claude Haiku 4.5:
+Let me think about this. The user is asking if the program will support files of arbitrary lengths.
+
+Looking at the logic:
+1. It reads characters one by one from both files
+2. It accumulates binary strings in `left` and `right`
+3. When each has >= 40 characters, it prints a line and removes those 40 characters from the strings
+4. After the loop, it handles remaining characters
+
+The key question is: are there any limits to file size?
+
+In terms of memory usage:
+- `left` and `right` are std::strings that grow as we read
+- Each character becomes 8 bits of binary
+- So we accumulate at most 40 + something in each string before flushing
+- We flush when both have >= 40 characters
+
+Wait, there's a potential issue here. Let me trace through the logic more carefully:
+
+```cpp
+while ((read1 = file1.get(c1)) || (read2 = file2.get(c2))) {
+    if (read1) {
+        left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+    }
+    if (read2) {
+        right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+    }
+    
+    while (left.size() >= 40 && right.size() >= 40) {
+        output << left.substr(0, 40) << " | " << right.substr(0, 40) << std::endl;
+        left = left.substr(40);
+        right = right.substr(40);
+    }
+}
+```
+
+The outer while loop continues as long as at least one file has more data. Each character becomes 8 bits in the binary string.
+
+So after reading one character from file1, `left` grows by 8 bits.
+
+
+After reading from file2, `right` grows by 8 bits. But the inner loop only outputs when both strings have at least 40 bits. This creates a problem if the files are different lengths—say file1 has 5 characters (40 bits) and file2 has 10 characters (80 bits). Once file1 finishes, `left` stays at 40 bits while `right` continues growing, but the condition `left.size() >= 40 && right.size() >= 40` keeps flushing pairs until one string drops below 40. The remaining bits get handled in the cleanup code after the loop. Now right has 48 bits. The inner loop condition `left.size() >= 40 && right.size() >= 40` fails since left is empty, so nothing flushes. The outer loop keeps going until file2 runs out or right accumulates enough data again.
+
+The real problem emerges with mismatched file sizes. If file1 has just 8 bits but file2 has 8000 bits, the first few iterations won't trigger the flush condition since both need at least 40 bits. Only after reading 5 characters from each file do left and right each reach 40 bits, allowing the inner loop to execute and output a line. But then left gets trimmed away while right still has plenty of data remaining.
+
+Once file1 is exhausted, left stays at 0 bits. The inner loop can't fire anymore since the condition requires both buffers to have 40+ bits. Right continues growing as more data arrives from file2, but nothing processes it until the final cleanup loop handles whatever remains.
+
+The cleanup code extracts 40-bit chunks from each buffer, padding left with spaces if needed, then outputs the line. It repeats this until both buffers are empty. So if right accumulated 1000 bits while left was stuck at 0, the cleanup would output 25 lines with left padded to 40 spaces each time, gradually consuming right's contents.
+
+The real constraint is the inner loop condition: it only flushes when both buffers have at least 40 bits. If one file ends early—say file1 has 1 character while file2 has 1GB—then left stops growing but right keeps accumulating 8 bits per character. Right could theoretically grow to billions of bits before the inner loop triggers again, since it's waiting for left to also reach 40 bits. in memory. The final cleanup loop processes remaining bits in 40-bit chunks, so it works correctly, but right could accumulate to significant sizes if files differ greatly in length—potentially gigabytes if one file is much smaller than the other. For typical files this isn't problematic, but it's not optimally designed for extreme size disparities. The original program's side-by-side printing suggests files are meant to be similar in size for comparison purposes, though the user's question about arbitrary length support indicates they're looking for any limitations. There are indeed constraints here.
+
+A more efficient approach might flush based on different conditions—like flushing whenever either file reaches 40 bits rather than waiting for both, or padding immediately after the main loop. The current implementation does produce correct output, just with potential memory inefficiency when file sizes diverge significantly.**Not optimally.** There's a memory issue if the files are vastly different lengths.
+
+The inner flush condition is:
+```cpp
+while (left.size() >= 40 && right.size() >= 40)
+```
+
+This only flushes when **both** strings have at least 40 characters. If file1 is short (e.g., 1 character = 8 bits) and file2 is very large (e.g., 1GB), then:
+- After file1 ends, `left` has 8 bits
+- `right` keeps growing without being flushed because `left.size() < 40`
+- `right` accumulates in memory until file2 finishes
+- For a 1GB file, `right` could grow to ~8GB in memory before cleanup
+
+**Better approach:**
+
+```cpp
+while ((read1 = file1.get(c1)) || (read2 = file2.get(c2))) {
+    if (read1) left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+    if (read2) right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+    
+    while ((left.size() >= 40 || right.size() >= 40) && (!left.empty() || !right.empty())) {
+        std::string l = (left.size() >= 40) ? left.substr(0, 40) : left;
+        std::string r = (right.size() >= 40) ? right.substr(0, 40) : right;
+        
+        l.resize(40, ' ');
+        r.resize(40, ' ');
+        
+        output << l << " | " << r << std::endl;
+        
+        left = (left.size() > 40) ? left.substr(40) : "";
+        right = (right.size() > 40) ? right.substr(40) : "";
+    }
+}
+```
+
+This flushes whenever **either** has 40+ characters, preventing unbounded memory growth.
+
+--------------------
+
+User prompt 13 of 23 - 5/14/2026, 11:32:37 PM:
+Include the better approach in the full program, and make '40' into a constexpr int. 
+
+Claude Haiku 4.5:
+The user wants me to rewrite the program with the better approach I mentioned, and make '40' into a constexpr int. Let me incorporate that.
+
+I need to:
+1. Add `constexpr int WIDTH = 40;`
+2. Replace all instances of `40` with `WIDTH`
+3. Use the better flush condition: `while ((left.size() >= WIDTH || right.size() >= WIDTH) && (!left.empty() || !right.empty()))`
+4. Keep everything else the same
+
+Let me write the full program:```cpp
+#include <iostream>
+#include <fstream>
+#include <bitset>
+#include <string>
+
+constexpr int WIDTH = 40;
+
+int main(int argc, char* argv[]) {
+    if (argc < 3) {
+        std::cerr << "Usage: " << argv[0] << " <file1> <file2>" << std::endl;
+        return 1;
+    }
+
+    std::ifstream file1(argv[1]);
+    std::ifstream file2(argv[2]);
+    std::ofstream output("output.txt");
+    
+    if (!file1.is_open() || !file2.is_open()) {
+        std::cerr << "Error: Could not open input files" << std::endl;
+        return 1;
+    }
+    
+    if (!output.is_open()) {
+        std::cerr << "Error: Could not open output.txt" << std::endl;
+        return 1;
+    }
+
+    std::string left = "";
+    std::string right = "";
+    char c1, c2;
+    bool read1, read2;
+    
+    while ((read1 = file1.get(c1)) || (read2 = file2.get(c2))) {
+        if (read1) {
+            left += std::bitset<8>(static_cast<unsigned char>(c1)).to_string();
+        }
+        if (read2) {
+            right += std::bitset<8>(static_cast<unsigned char>(c2)).to_string();
+        }
+        
+        while ((left.size() >= WIDTH || right.size() >= WIDTH) && (!left.empty() || !right.empty())) {
+            std::string l = (left.size() >= WIDTH) ? left.substr(0, WIDTH) : left;
+            std::string r = (right.size() >= WIDTH) ? right.substr(0, WIDTH) : right;
+            
+            l.resize(WIDTH, ' ');
+            r.resize(WIDTH, ' ');
+            
+            output << l << " | " << r << std::endl;
+            
+            left = (left.size() > WIDTH) ? left.substr(WIDTH) : "";
+            right = (right.size() > WIDTH) ? right.substr(WIDTH) : "";
+        }
+    }
+    
+    // Handle remaining characters
+    while (!left.empty() || !right.empty()) {
+        std::string l = (left.size() >= WIDTH) ? left.substr(0, WIDTH) : left;
+        std::string r = (right.size() >= WIDTH) ? right.substr(0, WIDTH) : right;
+        
+        l.resize(WIDTH, ' ');
+        r.resize(WIDTH, ' ');
+        
+        output << l << " | " << r << std::endl;
+        
+        left = (left.size() > WIDTH) ? left.substr(WIDTH) : "";
+        right = (right.size() > WIDTH) ? right.substr(WIDTH) : "";
+    }
+    
+    file1.close();
+    file2.close();
+    output.close();
+    return 0;
+}
+```
+
+**Changes:**
+- Added `constexpr int WIDTH = 40;` at the top
+- Replaced all `40` with `WIDTH`
+- Updated the flush condition to `(left.size() >= WIDTH || right.size() >= WIDTH)` for better memory efficiency with files of arbitrary lengths
+
+Now you can easily adjust `WIDTH` if needed.
+
+--------------------
+
+User prompt 14 of 23 - 5/14/2026, 11:46:35 PM:
+I cleaned up the provided program: 
+
+
+
+
+// 
+
+#include <iostream>
+#include <fstream>
+#include<vector> 
+#include <string>
+#include <bitset>
+
+
+constexpr int panel = 40;
+
+using namespace std; 
+
+int main(int argc, char* argv[]) {
+    const vector<string> args = {argv + 1, argv + argc}; 
+
+    if (args.size() < 3) {
+        cerr << "Usage: " << args[0] << " <path/to/ciphertext> <path/to/plaintext>" << '\n'; 
+        return 1;
+    }
+
+    ifstream ciphertext(args[1]);
+    ifstream plaintext(args[2]);
+    ofstream output("output.txt");
+    
+    if (!ciphertext.is_open() || !plaintext.is_open()) {
+        cerr << "Error: Could not open input files" << '\n';
+        return 1;
+    }
+    
+    if (!output.is_open()) {
+        cerr << "Error: Could not open output.txt" << '\n'; 
+        return 1;
+    }
+
+    string left = "";
+    string right = "";
+    char c1 = '\0', c2 = '\0';
+    bool read1 = true, read2 = true;
+    
+    while ((read1 = ciphertext.get(c1)) || (read2 = plaintext.get(c2))) {
+        if (read1) {
+            left += bitset<8>(static_cast<unsigned char>(c1)).to_string();
+        }
+        if (read2) {
+            right += bitset<8>(static_cast<unsigned char>(c2)).to_string();
+        }
+        
+        while ((left.size() >= panel || right.size() >= panel) && (!left.empty() || !right.empty())) {
+            string l = (left.size() >= panel) ? left.substr(0, panel) : left;
+            string r = (right.size() >= panel) ? right.substr(0, panel) : right;
+            
+            l.resize(panel, ' ');
+            r.resize(panel, ' ');
+            
+            output << l << " | " << r << '\n';
+            
+            left = (left.size() > panel) ? left.substr(panel) : "";
+            right = (right.size() > panel) ? right.substr(panel) : "";
+        }
+    }
+    
+    // Handle remaining characters
+    while (!left.empty() || !right.empty()) {
+        string l = (left.size() >= panel) ? left.substr(0, panel) : left;
+        string r = (right.size() >= panel) ? right.substr(0, panel) : right;
+        
+        l.resize(panel, ' ');
+        r.resize(panel, ' ');
+        
+        output << l << " | " << r << endl;
+        
+        left = (left.size() > panel) ? left.substr(panel) : "";
+        right = (right.size() > panel) ? right.substr(panel) : "";
+    }
+    
+    ciphertext.close();
+    plaintext.close();
+    output.close();
+    return 0;
+}
+
+
+
+
+
+
+Producing the following compiler errors: 
+
+
+$ g++ main.cpp -o binary_look
+main.cpp: In function ‘int main(int, char**)’:
+main.cpp:41:35: error: cannot convert ‘std::basic_istream<char>::__istream_type’ {aka ‘std::basic_istream<char>’} to ‘bool’ in assignment
+   41 |     while ((read1 = ciphertext.get(c1)) || (read2 = plaintext.get(c2))) {
+      |                     ~~~~~~~~~~~~~~^~~~
+      |                                   |
+      |                                   std::basic_istream<char>::__istream_type {aka std::basic_istream<char>}
+main.cpp:41:66: error: cannot convert ‘std::basic_istream<char>::__istream_type’ {aka ‘std::basic_istream<char>’} to ‘bool’ in assignment
+   41 |     while ((read1 = ciphertext.get(c1)) || (read2 = plaintext.get(c2))) {
+      |                                                     ~~~~~~~~~~~~~^~~~
+      |                                                                  |
+      |                                                                  std::basic_istream<char>::__istream_type {aka std::basic_istream<char>}
+
+Claude Haiku 4.5:
+The issue is that `istream::get(c)` returns the stream itself (for chaining), not a boolean. To check if the read was successful, you need to check the stream's state after calling `get()`.
+
+The user needs to either:
+1. Call `get()` and then check the stream state with `if (ciphertext)` or `if (ciphertext.eof())`, etc.
+2. Use a different approach like checking `eof()` explicitly
+
+The cleanest approach would be something like:
+```cpp
+while (ciphertext.get(c1) || plaintext.get(c2)) {
+    if (ciphertext.eof() && plaintext.eof()) break;
+    // process
+}
+```
+
+Or better:
+```cpp
+char c1, c2;
+while (ciphertext.get(c1) || plaintext.get(c2)) {
+    // ciphertext.get() and plaintext.get() return the stream reference
+    // which converts to bool based on the stream state
+    if (ciphertext.get(c1)) {
+        // c1 was successfully read
+    }
+    if (plaintext.get(c2)) {
+        // c2 was successfully read
+    }
+    // process
+}
+```
+
+Actually, let me think about this more carefully. The `get()` method returns a reference to the stream. When you use a stream in a boolean context, it checks the `goodbit` or similar state. But the assignment `read1 = ciphertext.get(c1)` tries to convert the stream to bool and assign it, which doesn't work.
+
+The correct approach is to use the stream directly in the condition:
+
+```cpp
+while (ciphertext.get(c1) || plaintext.get(c2)) {
+    if (ciphertext) {  // or ciphertext.gcount() > 0
+        // c1 was read
+    }
+    if (plaintext) {  // or plaintext.gcount() > 0
+        // c2 was read
+    }
+}
+```
+
+When `stream.get(c)` reads a character into `c`, it returns the stream reference. If the read fails (EOF or error), the stream's failbit gets set, so checking the stream state directly tells you whether the operation succeeded. The simplest fix is to track success with boolean flags and check the stream state after each `get()` call, or use `gcount()` to verify a character was actually read.The issue is that `istream::get(c)` returns a reference to the stream, not a boolean. You can't assign it directly to a `bool`. You need to check the stream's state after calling `get()`.
+
+Here's the fix:
+
+```cpp
+char c1 = '\0', c2 = '\0';
+
+while (true) {
+    bool read1 = (bool)ciphertext.get(c1);
+    bool read2 = (bool)plaintext.get(c2);
+    
+    if (!read1 && !read2) break;
+    
+    if (read1) {
+        left += bitset<8>(static_cast<unsigned char>(c1)).to_string();
+    }
+    if (read2) {
+        right += bitset<8>(static_cast<unsigned char>(c2)).to_string();
+    }
+    
+    while ((left.size() >= panel || right.size() >= panel) && (!left.empty() || !right.empty())) {
+        string l = (left.size() >= panel) ? left.substr(0, panel) : left;
+        string r = (right.size() >= panel) ? right.substr(0, panel) : right;
+        
+        l.resize(panel, ' ');
+        r.resize(panel, ' ');
+        
+        output << l << " | " << r << '\n';
+        
+        left = (left.size() > panel) ? left.substr(panel) : "";
+        right = (right.size() > panel) ? right.substr(panel) : "";
+    }
+}
+```
+
+**Changes:**
+- Moved `read1` and `read2` declarations inside the loop
+- Changed the condition to `while (true)` with explicit `break`
+- Cast the stream to `bool` with `(bool)ciphertext.get(c1)`
+- Check if both reads failed with `if (!read1 && !read2) break;`
+
+The cast converts the stream state to a boolean (true if the stream is in a good state, false if EOF or error).
+
+--------------------
