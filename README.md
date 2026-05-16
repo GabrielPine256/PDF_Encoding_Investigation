@@ -31,29 +31,30 @@ It offers the following tools to figure the encoding of the PDF:
 
 $ strings output.pdf | grep -i "encoding"
 Which gives: 
-<< /BaseFont /NFMIKD+AmericanTypewriter-Bold /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 77 0 R /LastChar 222 /Subtype /TrueType /Type /Font /Widths 78 0 R >>
-<< /BaseFont /BBJMGB+AmericanTypewriter /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 79 0 R /LastChar 211 /Subtype /TrueType /Type /Font /Widths 80 0 R >>
-<< /BaseFont /NLTNUD+Symbol /Encoding /MacRomanEncoding /FirstChar 165 /FontDescriptor 96 0 R /LastChar 165 /Subtype /TrueType /Type /Font /Widths 97 0 R >>
+> << /BaseFont /NFMIKD+AmericanTypewriter-Bold /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 77 0 R /LastChar 222 /Subtype /TrueType /Type /Font /Widths 78 0 R >>
+> << /BaseFont /BBJMGB+AmericanTypewriter /Encoding /MacRomanEncoding /FirstChar 32 /FontDescriptor 79 0 R /LastChar 211 /Subtype /TrueType /Type /Font /Widths 80 0 R >>
+> << /BaseFont /NLTNUD+Symbol /Encoding /MacRomanEncoding /FirstChar 165 /FontDescriptor 96 0 R /LastChar 165 /Subtype /TrueType /Type /Font /Widths 97 0 R >>
 
-pdftotext -enc MacRoman input.pdf output.txt
+$ pdftotext -enc MacRoman input.pdf output.txt
 And then letting it auto-detect the encoding: 
-pdftotext input.pdf output.txt
+$ pdftotext input.pdf output.txt
 
-qpdf --decrypt input.pdf output.pdf
-pdftohtml output.pdf output.html 
+$ qpdf --decrypt input.pdf output.pdf
+$ pdftohtml output.pdf output.html 
 
-pipx install pdfminer.six
-pdf2txt.py output.pdf
+$ pipx install pdfminer.six
+$ pdf2txt.py output.pdf
 
 Claude: 
 > **Mac OS X 10.5.8's Quartz PDFContext** (2009) had known issues:
 > - It created subset fonts with `MacRomanEncoding` but didn't reliably embed ToUnicode CMaps
 > - Even if a CMap existed, it might have been generated incorrectly
 > - When copy-pasting, older viewers would use the font encoding table directly instead of the proper Unicode mapping
-qpdf --stream-data=preserve output.pdf repaired.pdf
+$ qpdf --stream-data=preserve output.pdf repaired.pdf
 
-gs -sDEVICE=txtwrite -o plaintext.txt output.pdf
-gs -sDEVICE=txtwrite -dUseCIEColor -o plaintext.txt output.pdf
+$ gs -sDEVICE=txtwrite -o plaintext.txt output.pdf
+
+& gs -sDEVICE=txtwrite -dUseCIEColor -o plaintext.txt output.pdf
 
 All output text files included the first page itself (which actually copy-pastes fine) and gibberish for the rest. 
 
