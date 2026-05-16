@@ -1,4 +1,5 @@
-// 
+// g++ main.cpp -o binary_look
+// ./binary_look sample_ciphertext.txt sample_plaintext.txt
 
 #include <iostream>
 #include <fstream>
